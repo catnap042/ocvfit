@@ -432,35 +432,45 @@ measured range are flagged invalid.
 All models evaluate both electrodes **on the same full-cell coordinate** and
 subtract:
 
-$$V = U_{PE}(y) - U_{NE}(x) + V_{offset}$$
+```math
+V = U_{PE}(y) - U_{NE}(x) + V_{offset}
+```
 
-**Cathode-fixed model** (full-cell SOC $s$, 0 = discharged). The positive
+**Cathode-fixed model** (full-cell SOC $`s`$, 0 = discharged). The positive
 window is fixed to the whole reference curve, and the negative axis is
 transformed before it is compared:
 
-$$y(s) = y_{max} - s\,(y_{max}-y_{min}),\qquad u_n(s) = S_n + s/K_n$$
+```math
+y(s) = y_{max} - s\,(y_{max}-y_{min}),\qquad u_n(s) = S_n + s/K_n
+```
 
-where $u_n$ is the normalised coordinate of the negative reference curve.
-$K_n$ is the negative/positive capacity ratio in the window ($K_n>1$ compresses
-the negative curve) and $S_n$ the slippage of its start point. A rising $S_n$
-indicates lithium inventory loss, a falling $K_n$ loss of negative active
+where $`u_n`$ is the normalised coordinate of the negative reference curve.
+$`K_n`$ is the negative/positive capacity ratio in the window ($`K_n>1`$ compresses
+the negative curve) and $`S_n`$ the slippage of its start point. A rising $`S_n`$
+indicates lithium inventory loss, a falling $`K_n`$ loss of negative active
 material. Because the positive window is fixed, LAM_PE cannot be detected and
 is absorbed by the other parameters, so use this model as a fast baseline.
 
 **Window model.** Both windows are free:
 
-$$y(s) = y_0 + (y_{100}-y_0)\,s,\qquad x(s) = x_0 + (x_{100}-x_0)\,s$$
+```math
+y(s) = y_0 + (y_{100}-y_0)\,s,\qquad x(s) = x_0 + (x_{100}-x_0)\,s
+```
 
-**Capacity model** (absolute capacity $q$ discharged from full charge, Ah):
+**Capacity model** (absolute capacity $`q`$ discharged from full charge, Ah):
 
-$$L_{NE}(q) = x_{100} Q_{NE} - q,\qquad L_{PE}(q) = n_{Li} - x_{100} Q_{NE} + q$$
+```math
+L_{NE}(q) = x_{100} Q_{NE} - q,\qquad L_{PE}(q) = n_{Li} - x_{100} Q_{NE} + q
+```
 
-$$V(q) = U_{PE}\!\left(L_{PE}/Q_{PE}\right) - U_{NE}\!\left(L_{NE}/Q_{NE}\right) - R$$
+```math
+V(q) = U_{PE}\!\left(L_{PE}/Q_{PE}\right) - U_{NE}\!\left(L_{NE}/Q_{NE}\right) - R
+```
 
-with $n_{Li} = y_{100} Q_{PE} + x_{100} Q_{NE}$. If the rested full-charge
-voltage $V_{full}$ is known, $x_{100}$ is solved from
-$U_{PE}(y_{100}) - U_{NE}(x_{100}) = V_{full}$ (full-charge anchor), leaving
-$Q_{PE}, Q_{NE}, n_{Li}, R$ free. Otherwise $x_{100}$ is fitted as well. $R$
+with $`n_{Li} = y_{100} Q_{PE} + x_{100} Q_{NE}`$. If the rested full-charge
+voltage $`V_{full}`$ is known, $`x_{100}`$ is solved from
+$`U_{PE}(y_{100}) - U_{NE}(x_{100}) = V_{full}`$ (full-charge anchor), leaving
+$`Q_{PE}, Q_{NE}, n_{Li}, R`$ free. Otherwise $`x_{100}`$ is fitted as well. $`R`$
 lumps polarisation and reference mismatch. It is a fitted offset and should
 not be read as a DC resistance.
 
@@ -469,10 +479,12 @@ not be read as a DC resistance.
 All active materials of an electrode share one potential at equilibrium. The
 stored lithium is the sum over components,
 
-$$L_{PE}(U) = \sum_k Q_k\, x_k(U),$$
+```math
+L_{PE}(U) = \sum_k Q_k\, x_k(U),
+```
 
 and the blended potential is its numerical inverse. Each component has its own
-capacity $Q_k$ and therefore its own LAM. Outside its measured potential range
+capacity $`Q_k`$ and therefore its own LAM. Outside its measured potential range
 a component is held at its end lithiation (phase exhausted or full), and
 non-monotone measured segments are repaired with PAVA before inversion.
 Potentials or SOCs are never averaged.
@@ -481,18 +493,20 @@ Potentials or SOCs are never averaged.
 
 For SOC-axis models (`fit_ocv`) the recommended `"v2"` objective is
 
-$$J = \frac{\sum_i w_i\,\rho_\delta(r_i)}{\sum_i w_i} + \lambda_{edge}\left[\bar r_{low}^2 + \bar r_{high}^2\right] + \lambda_{valid}\max(0, f_{min} - f_{valid})$$
+```math
+J = \frac{\sum_i w_i\,\rho_\delta(r_i)}{\sum_i w_i} + \lambda_{edge}\left[\bar r_{low}^2 + \bar r_{high}^2\right] + \lambda_{valid}\max(0, f_{min} - f_{valid})
+```
 
-with Huber loss $\rho_\delta$ ($\delta$ = 2 mV), weights $w_i$ = edge weight
-(x10 within 5 % of either end) times $1 + 0.5\,|dV/ds|/\mathrm{median}|dV/ds|$,
-the mean residuals $\bar r$ of the two end regions, and a penalty on the
+with Huber loss $`\rho_\delta`$ ($`\delta`$ = 2 mV), weights $`w_i`$ = edge weight
+(x10 within 5 % of either end) times $`1 + 0.5\,|dV/ds|/\mathrm{median}|dV/ds|`$,
+the mean residuals $`\bar r`$ of the two end regions, and a penalty on the
 fraction of points outside the valid region (full coverage required by
 default, so the optimiser cannot drop poorly fitted end points). Optimisation:
 grid or random pre-screening, then L-BFGS-B and a Nelder-Mead polish, or
 differential evolution.
 
 For the capacity model (`fit_capacity`), starting points are pre-screened on a
-grid of $(Q_{PE}, Q_{NE}, n_{Li})$ (and blend fractions), and the 10 best are
+grid of $`(Q_{PE}, Q_{NE}, n_{Li})`$ (and blend fractions), and the 10 best are
 refined with a robust `soft_l1` least-squares fit (5 mV scale) followed by
 ordinary least squares. Random starts often land in a solution where the wrong
 electrode limits the end of discharge, which is why the grid pre-screen is
@@ -501,7 +515,9 @@ valley around the true solution too narrow for plain least squares.
 
 ### Degradation modes
 
-$$LLI = 1 - \frac{n_{Li}^{aged}}{n_{Li}^{BOL}},\quad LAM_{PE} = 1 - \frac{Q_{PE}^{aged}}{Q_{PE}^{BOL}},\quad LAM_{NE} = 1 - \frac{Q_{NE}^{aged}}{Q_{NE}^{BOL}}$$
+```math
+LLI = 1 - \frac{n_{Li}^{aged}}{n_{Li}^{BOL}},\quad LAM_{PE} = 1 - \frac{Q_{PE}^{aged}}{Q_{PE}^{BOL}},\quad LAM_{NE} = 1 - \frac{Q_{NE}^{aged}}{Q_{NE}^{BOL}}
+```
 
 These three quantities are all that OCV data can determine (given unchanged
 half-cell shapes, fully disconnected inactive material and uniform ageing).
@@ -509,8 +525,9 @@ The common five-mode split (side-reaction LLI plus lithiated/delithiated LAM of
 each electrode) has two extra degrees of freedom that leave no trace in the
 OCV. `side_reaction_interval` therefore reports the feasible range
 
-$$\left[\max\left(0,\ \Delta n_{Li} - C_{max}\right),\ \Delta n_{Li} - C_{min}\right],\quad
-C_{min} = x_0 \Delta Q_{NE} + y_{100} \Delta Q_{PE},\quad C_{max} = x_{100} \Delta Q_{NE} + y_0 \Delta Q_{PE}$$
+```math
+\left[\max\left(0,\ \Delta n_{Li} - C_{max}\right),\ \Delta n_{Li} - C_{min}\right],\quad C_{min} = x_0 \Delta Q_{NE} + y_{100} \Delta Q_{PE},\quad C_{max} = x_{100} \Delta Q_{NE} + y_0 \Delta Q_{PE}
+```
 
 and a point value only under an explicit assumption (material lost at full charge).
 
@@ -520,9 +537,11 @@ Residuals along an OCV curve are strongly correlated, so naive confidence
 intervals are far too narrow. `profile_interval` fixes one parameter, refits
 the others and accepts values with
 
-$$\Delta\chi^2 \le 3.84\,\frac{1+\rho}{1-\rho}$$
+```math
+\Delta\chi^2 \le 3.84\,\frac{1+\rho}{1-\rho}
+```
 
-where $\rho$ is the lag-1 autocorrelation of the residuals (inflation capped at
+where $`\rho`$ is the lag-1 autocorrelation of the residuals (inflation capped at
 100). `bias_budget` perturbs the half-cell curves (default +/-3 mV offset and
 2 mV smooth shape error), refits, and takes the largest deviation. A quantity
 whose final interval (profile interval +/- bias budget) has a half-width above
