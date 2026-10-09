@@ -1,5 +1,6 @@
 """ocvfit - half-cell based full-cell OCV fitting and degradation-mode analysis."""
 
+from . import io
 from .blend import BlendedElectrode
 from .datasets import demo_cells, sample_halfcell, synthesize_discharge
 from .degradation import cathode_fixed_indicators, degradation_modes, side_reaction_interval
@@ -38,6 +39,7 @@ __all__ = [
     "lag1_autocorrelation",
     "literature_ocp",
     "mode_interval",
+    "io",
     "monotonize",
     "objective",
     "profile_interval",

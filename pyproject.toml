@@ -12,14 +12,29 @@ license-files = ["LICENSE"]
 authors = [{ name = "catnap42" }]
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.22", "scipy>=1.9"]
-keywords = ["battery", "lithium-ion", "OCV", "open-circuit voltage", "degradation", "dV/dQ", "incremental capacity"]
+keywords = [
+    "lithium-ion", "battery", "ocv", "open-circuit voltage", "open-circuit potential",
+    "half-cell", "electrode alignment", "degradation modes", "battery degradation",
+    "LLI", "LAM", "loss of lithium inventory", "loss of active material",
+    "dQ/dV", "dV/dQ", "incremental capacity analysis", "differential voltage analysis",
+    "LFP", "NMC", "graphite", "state of health", "battery diagnostics", "electrochemistry",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Scientific/Engineering :: Chemistry",
+    "Typing :: Typed",
 ]
 
 [project.optional-dependencies]
@@ -27,7 +42,7 @@ plot = ["matplotlib>=3.5"]
 test = ["pytest>=7", "matplotlib>=3.5"]
 
 [project.urls]
-Homepage = "https://github.com/catnap042/ocvfit"
+Repository = "https://github.com/catnap042/ocvfit"
 Issues = "https://github.com/catnap042/ocvfit/issues"
 
 [tool.hatch.build.targets.wheel]

@@ -29,3 +29,5 @@ jobs:
           python examples/quickstart.py --chemistry nmc532
           python examples/cathode_fixed.py
           python examples/blended_cathode.py
+          python examples/make_example_csv.py
+          git diff --exit-code -- examples/data || echo "example CSVs differ from regenerated copies (platform float formatting)"
