@@ -7,17 +7,23 @@ paths (absolute paths are recommended, because relative paths are resolved
 against the server's working directory); each tool returns the JSON document
 written to ``out_dir`` plus absolute paths of the files it produced.
 
+The server reads only the files it is given, writes only ocvfit's own output
+file names into ``out_dir``, makes no network connections and runs no shell
+commands. Set the environment variable ``OCVFIT_MCP_ROOT`` to a directory to
+additionally refuse any input path or ``out_dir`` outside it.
+
 Works with the official ``mcp`` Python SDK 1.x (``FastMCP``) and 2.x
 (``MCPServer``).
 """
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
 from . import __version__
-from .workflow import Options, list_references, run_command
+from .workflow import Options, _is_reference, list_references, run_command
 
 INSTRUCTIONS = (
     "Deterministic full-cell OCV fitting and degradation-mode analysis for lithium-ion cells. "
@@ -31,12 +37,46 @@ INSTRUCTIONS = (
 )
 
 
+#: Optional sandbox: when this environment variable names a directory, every
+#: input path and ``out_dir`` must resolve (symlinks followed) inside it.
+ROOT_ENV = "OCVFIT_MCP_ROOT"
+
+_PATH_KEYS = ("ne", "bol", "aged")
+
+
+def _outside_root(paths: list[str]) -> list[str]:
+    root_env = os.environ.get(ROOT_ENV)
+    if not root_env:
+        return []
+    root = Path(root_env).expanduser().resolve()
+    bad = []
+    for p in paths:
+        r = Path(p).expanduser().resolve()
+        if r != root and root not in r.parents:
+            bad.append(p)
+    return bad
+
+
+def _refused(command: str, message: str) -> dict[str, Any]:
+    return {"tool": "ocvfit", "command": command, "status": "error", "exit_code": 2, "errors": [message]}
+
+
 def _run(command: str, out_dir: str, **kwargs: Any) -> dict[str, Any]:
     out = Path(out_dir).expanduser().resolve()
     pe = kwargs.pop("pe", None) or []
     given = {k: v for k, v in kwargs.items() if v is not None}
+    candidates = [str(p) for p in pe] + [given[k] for k in _PATH_KEYS if k in given]
+    paths = [p for p in candidates if not _is_reference(p)]
+    bad = _outside_root(paths + [out_dir])
+    if bad:
+        return _refused(command, f"path(s) outside the allowed root (${ROOT_ENV}): {bad}")
     opts = Options(pe=[str(p) for p in pe], out=str(out), **given)
-    doc = run_command(command, opts)
+    try:
+        doc = run_command(command, opts)
+    except OSError as exc:  # e.g. output directory not writable
+        return _refused(command, f"cannot write results to {out}: {exc.strerror or exc}")
+    if doc.get("output_dir") is None:
+        return doc
     doc["absolute_files"] = {k: str(out / v) for k, v in doc.get("files", {}).items()}
     return doc
 

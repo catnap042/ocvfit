@@ -394,7 +394,10 @@ Inputs use the [CSV format above](#7-using-your-own-csv-data) (other column name
 place of a path: `--pe lfp|nmc811|nmc532`, `--ne graphite|graphite_mohtat2020`
 (`ocvfit references` lists them, `ocvfit settings` prints the frozen settings).
 Exit codes: 0 success (check `warnings`), 1 internal error, 2 usage error, 3 invalid
-input, 4 fit failed.
+input, 4 fit failed. Errors are reported as messages, without a Python traceback (add
+`--debug` to see one). Input files are limited to 25 MiB and 100 000 data rows each.
+Results overwrite only ocvfit's own file names in `--out`; the run is refused if one of
+them is a symbolic link.
 
 Excerpt of `results/report.md` for the example data (synthetic truth: LLI 8 %,
 LAM_PE 5 %, LAM_NE 6 %; 150 points per curve):
@@ -452,7 +455,10 @@ ocvfit-mcp   # stdio server; normally started by the client
 
 Tools take file paths (use absolute paths; relative ones resolve against the server's
 working directory) and an `out_dir`, and return the same JSON document as the CLI plus
-`absolute_files` for the figures.
+`absolute_files` for the figures. The server reads only the files it is given, writes
+only into `out_dir`, makes no network connections and runs no shell commands. To confine
+it to one directory tree, set `OCVFIT_MCP_ROOT`; input paths and `out_dir` outside that
+directory are then refused (in the config below: `"env": {"OCVFIT_MCP_ROOT": "/path/to/data"}`).
 
 Claude Code:
 

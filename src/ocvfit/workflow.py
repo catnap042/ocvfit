@@ -52,6 +52,8 @@ FloatArray = NDArray[np.float64]
 __all__ = [
     "SETTINGS",
     "EXIT_CODES",
+    "MAX_INPUT_BYTES",
+    "MAX_INPUT_ROWS",
     "LITERATURE_ALIASES",
     "Options",
     "WorkflowError",
@@ -61,6 +63,7 @@ __all__ = [
     "run_ica",
     "run_report",
     "run_command",
+    "check_output_dir",
     "list_references",
 ]
 
@@ -130,6 +133,14 @@ EXIT_CODES: dict[int, str] = {
     3: "input data invalid (see errors)",
     4: "fit failed (no valid solution)",
 }
+
+#: Input limits: a single input file larger than this, or with more data rows,
+#: is rejected (exit code 3) so that a wrong or huge file cannot stall a fit.
+MAX_INPUT_BYTES = 25 * 1024 * 1024
+MAX_INPUT_ROWS = 100_000
+
+#: Names of the files a command may write into the output directory.
+_OUTPUT_NAME = re.compile(r"^(check|fit|modes|ica|report)(_ica)?\.(json|md|png)$|^ica_[0-9A-Za-z_]+\.csv$")
 
 #: Built-in literature references usable in place of a half-cell CSV.
 LITERATURE_ALIASES: dict[str, str] = {
@@ -241,12 +252,26 @@ def read_table(path: str, label: str) -> tuple[list[str], dict[str, FloatArray],
     p = Path(path)
     if not p.is_file():
         raise WorkflowError(3, f"{label}: file not found: {path}")
-    text = p.read_text(encoding="utf-8-sig", errors="replace")
+    size = p.stat().st_size
+    if size > MAX_INPUT_BYTES:
+        raise WorkflowError(
+            3, f"{label}: {path} is {size / 2**20:.1f} MiB; the limit is {MAX_INPUT_BYTES / 2**20:g} MiB"
+        )
+    raw = p.read_bytes()
+    if b"\x00" in raw:
+        raise WorkflowError(3, f"{label}: {path} is not a text (CSV) file")
+    text = raw.decode("utf-8-sig", errors="replace")
     lines = [ln for ln in text.splitlines() if ln.strip() and not ln.lstrip().startswith("#")]
     if len(lines) < 2:
         raise WorkflowError(3, f"{label}: {path} needs a header row and at least one data row")
     head = lines[0]
     delim = max((",", ";", "\t"), key=head.count)
+    if len(lines) - 1 > MAX_INPUT_ROWS:
+        raise WorkflowError(
+            3,
+            f"{label}: {path} has {len(lines) - 1} data rows; the limit is {MAX_INPUT_ROWS}. "
+            "Downsample the curve (a few hundred to a few thousand points is enough).",
+        )
     rows = list(csv.reader(lines, delimiter=delim))
     header = [h.strip() for h in rows[0]]
     cols: dict[str, list[float]] = {h: [] for h in header}
@@ -266,6 +291,12 @@ def read_table(path: str, label: str) -> tuple[list[str], dict[str, FloatArray],
     return header, data, {"rows": len(rows) - 1, "non_numeric_cells": bad, "short_rows": short}
 
 
+def _short(header: list[str], n: int = 12, width: int = 40) -> list[str]:
+    """Header names for error messages, truncated so a wrong file is not echoed back."""
+    names = [h if len(h) <= width else h[: width - 3] + "..." for h in header[:n]]
+    return names + ([f"... ({len(header) - n} more)"] if len(header) > n else [])
+
+
 def _get_columns(
     path: str, label: str, x_col: str, y_col: str
 ) -> tuple[FloatArray, FloatArray, dict[str, Any]]:
@@ -274,7 +305,7 @@ def _get_columns(
     if missing:
         raise WorkflowError(
             3,
-            f"{label}: column(s) {missing} not found in {path}; available columns: {header}. "
+            f"{label}: column(s) {missing} not found in {path}; available columns: {_short(header)}. "
             "Rename the columns or pass the column-name options.",
         )
     return data[x_col], data[y_col], counts
@@ -1152,17 +1183,49 @@ def run_report(opts: Options) -> dict[str, Any]:
 _RUNNERS = {"check": run_check, "fit": run_fit, "modes": run_modes, "ica": run_ica, "report": run_report}
 
 
-def run_command(command: str, opts: Options) -> dict[str, Any]:
-    """Run one command by name; unexpected exceptions become exit code 1."""
+def run_command(command: str, opts: Options, debug: bool = False) -> dict[str, Any]:
+    """Run one command by name; unexpected exceptions become exit code 1.
+
+    With ``debug=True`` unexpected exceptions propagate (full traceback).
+    """
     if command not in _RUNNERS:
         raise ValueError(f"unknown command {command!r}; choose from {sorted(_RUNNERS)}")
+    problem = check_output_dir(opts.out)
+    if problem:
+        doc = _base(command, opts)
+        doc["errors"].append(problem)
+        doc["exit_code"] = 2
+        _set_status(doc)
+        doc["files"] = {}
+        doc["output_dir"] = None
+        return _clean(doc)
     try:
         return _RUNNERS[command](opts)
     except Exception as exc:  # noqa: BLE001 - reported to the caller as JSON
+        if debug:
+            raise
         doc = _base(command, opts)
         doc["errors"].append(f"internal error: {type(exc).__name__}: {exc}")
         doc["exit_code"] = 1
         return _finish(doc, Path(opts.out), "\n".join(_md_header(doc, command)) + "\n")
+
+
+def check_output_dir(out: str) -> str | None:
+    """Return a problem with the output directory, or ``None`` if it is usable.
+
+    The directory may exist (ocvfit then overwrites only its own file names,
+    see :data:`_OUTPUT_NAME`), but it must be a directory, and none of those
+    file names may be a symbolic link, so a run can never write through a link
+    to a file elsewhere.
+    """
+    p = Path(out)
+    if p.exists() and not p.is_dir():
+        return f"output directory {out} exists and is not a directory"
+    if p.is_dir():
+        links = sorted(c.name for c in p.iterdir() if c.is_symlink() and _OUTPUT_NAME.match(c.name))
+        if links:
+            return f"output directory {out} has symlinks named like ocvfit outputs: {links}; refusing"
+    return None
 
 
 def list_references() -> dict[str, Any]:

@@ -88,6 +88,9 @@ def _add_inputs(p: argparse.ArgumentParser, command: str) -> None:
     o.add_argument("--title", help="figure title")
     o.add_argument("--no-figures", action="store_true", help="skip PNG figures")
     o.add_argument("--json", action="store_true", help="print the full JSON document to stdout")
+    o.add_argument(
+        "--debug", action="store_true", help="show the Python traceback of unexpected internal errors"
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -141,9 +144,17 @@ def main(argv: Sequence[str] | None = None) -> int:
 
         print(json.dumps(SETTINGS, indent=2))
         return 0
-    doc = run_command(args.command, options_from_args(args))
+    try:
+        doc = run_command(args.command, options_from_args(args), debug=args.debug)
+    except OSError as exc:  # e.g. output directory not writable
+        if args.debug:
+            raise
+        print(f"ocvfit {args.command}: cannot write results: {exc.strerror or exc}", file=sys.stderr)
+        return 2
     if args.json:
         print(json.dumps(doc, indent=2))
+    elif doc.get("output_dir") is None:
+        pass  # nothing was written; the errors are printed below
     else:
         out = doc["output_dir"]
         md = (Path(out) / doc["files"]["summary"]).read_text()

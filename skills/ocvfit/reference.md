@@ -30,7 +30,10 @@ Common options: `--out DIR` (default `ocvfit_out`), `--title`, `--no-figures`, `
 | 4 | fit failed (no finite model over the data) | check half-cell coverage / chemistry pairing |
 
 The JSON and Markdown files are written for every exit code, except when the command line
-itself cannot be parsed (argparse prints the usage and exits with 2).
+itself cannot be parsed (argparse prints the usage and exits with 2) or the output directory
+is unusable (a file, not writable, or one of the output names is a symbolic link; exit 2,
+message on stderr). Input files are limited to 25 MiB and 100 000 data rows each (exit 3).
+Unexpected errors are reported without a traceback; `--debug` shows it.
 
 ## Input checks performed by `check` (and before every fit)
 
