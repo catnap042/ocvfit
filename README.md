@@ -48,6 +48,9 @@ bundled.
 - **Plotting**: a four-panel fit report.
 - **Literature OCP functions**: LFP, NMC811, NMC532 and two graphites, for
   examples, tests and synthetic studies.
+- **Agent-ready**: a deterministic `ocvfit` CLI with frozen settings and JSON/PNG/Markdown
+  output, an Agent Skill, and an optional MCP server
+  ([Use with AI agents](#use-with-ai-agents)).
 
 ## Table of contents
 
@@ -61,6 +64,10 @@ bundled.
   - [5. dQ/dV and dV/dQ](#5-dqdv-and-dvdq)
   - [6. Plotting](#6-plotting)
   - [7. Using your own CSV data](#7-using-your-own-csv-data)
+- [Use with AI agents](#use-with-ai-agents)
+  - [Command-line tool](#command-line-tool)
+  - [Agent Skill](#agent-skill)
+  - [MCP server](#mcp-server)
 - [Worked examples](#worked-examples)
   - [LFP/graphite (headline)](#lfpgraphite-headline)
   - [NMC532/graphite](#nmc532graphite)
@@ -75,8 +82,10 @@ bundled.
 
 ```bash
 pip install git+https://github.com/catnap042/ocvfit
-# with plotting support (Matplotlib)
+# with plotting support (Matplotlib; recommended for the CLI figures)
 pip install "ocvfit[plot] @ git+https://github.com/catnap042/ocvfit"
+# with the optional MCP server
+pip install "ocvfit[mcp] @ git+https://github.com/catnap042/ocvfit"
 ```
 
 Development (editable) install with test dependencies:
@@ -84,7 +93,7 @@ Development (editable) install with test dependencies:
 ```bash
 git clone https://github.com/catnap042/ocvfit
 cd ocvfit
-pip install -e ".[test]"
+pip install -e ".[test,mcp]"
 pytest
 ```
 
@@ -347,6 +356,126 @@ print(report["n_knots"], "knots")
 Data that come as capacity in mAh against a delithiation axis can be turned
 into a curve by normalising first, for example `soc = Q / Q_max`, then calling
 `OCPCurve.from_soc(soc, U, coordinate="delithiation")`.
+
+## Use with AI agents
+
+`ocvfit` ships three agent-friendly layers on top of the Python API. All three run
+the **same fixed, deterministic code path** (`ocvfit.workflow`): settings are frozen,
+seeds are fixed, and every result file echoes the settings, the input hashes and the
+library versions, so two runs on the same inputs give identical JSON. An agent runs
+the commands and reads the output instead of writing its own fitting code.
+
+### Command-line tool
+
+Installed with the package as the `ocvfit` console script (or `python -m ocvfit`):
+
+```bash
+pip install "ocvfit[plot] @ git+https://github.com/catnap042/ocvfit"
+
+ocvfit check  --pe examples/data/lfp_halfcell.csv --ne examples/data/graphite_halfcell.csv \
+              --bol examples/data/lfp_fullcell_bol.csv --aged examples/data/lfp_fullcell_aged.csv \
+              --v-full 3.45 --out results
+ocvfit report --pe examples/data/lfp_halfcell.csv --ne examples/data/graphite_halfcell.csv \
+              --bol examples/data/lfp_fullcell_bol.csv --aged examples/data/lfp_fullcell_aged.csv \
+              --v-full 3.45 --out results
+```
+
+| command | does | writes to `--out` |
+|---|---|---|
+| `check` | validates columns, units (V vs mV), monotonicity, capacity origin, axis direction, coverage | `check.json`, `check.md`, `check.png` |
+| `fit` | fits BOL (and aged) curves; capacity model by default (`--model window` / `cathode-fixed` optional) | `fit.json`, `fit.md`, `fit.png` |
+| `modes` | LLI / LAM_PE / LAM_NE with profile interval + bias budget and an identifiability verdict | `modes.json`, `modes.md` |
+| `ica` | dQ/dV and dV/dQ, peak positions, BOL-to-aged peak shifts | `ica.json`, `ica.md`, `ica.png`, `ica_<label>.csv` |
+| `report` | check + fit + modes (with `--aged`) + ica | `report.json`, `report.md`, `report.png`, `report_ica.png` |
+
+Inputs use the [CSV format above](#7-using-your-own-csv-data) (other column names via
+`--halfcell-x-col`, `--halfcell-v-col`, `--q-col`, `--v-col`; SOC-axis half-cells via
+`--pe-coordinate delithiation`). Without half-cell data, use a built-in reference in
+place of a path: `--pe lfp|nmc811|nmc532`, `--ne graphite|graphite_mohtat2020`
+(`ocvfit references` lists them, `ocvfit settings` prints the frozen settings).
+Exit codes: 0 success (check `warnings`), 1 internal error, 2 usage error, 3 invalid
+input, 4 fit failed.
+
+Excerpt of `results/report.md` for the example data (synthetic truth: LLI 8 %,
+LAM_PE 5 %, LAM_NE 6 %; 150 points per curve):
+
+```text
+| mode | value | final interval | half-width | verdict |
+|---|---|---|---|---|
+| LLI | 7.98 % | [7.65, 8.29] % | 0.32 pp | identifiable |
+| LAM_PE | (5.75 %) | [-23.54, 34.95] % | 29.24 pp | not_identifiable |
+| LAM_NE | (5.84 %) | [4.26, 7.20] % | 1.47 pp | not_identifiable |
+```
+
+With these shorter, noisier example curves, LAM_NE ends up just above the 1 pp
+threshold, while it is identifiable in the 300-point worked example below. The verdict
+follows the data, not the chemistry label.
+
+### Agent Skill
+
+[`skills/ocvfit/`](skills/ocvfit) is an Agent Skill (`SKILL.md` with YAML front
+matter, plus [`reference.md`](skills/ocvfit/reference.md) and a fixed wrapper script).
+It tells the agent when to use the tool, which inputs it needs, the exact commands to run
+in order, how to read the JSON (identifiability, the LFP LAM_PE caveat, `R` is not a DC
+resistance, cathode-fixed is only a baseline), what not to do (no hand-written fitting
+code, no changed defaults, no point values for non-identifiable modes) and how to report.
+
+```bash
+# all projects
+mkdir -p ~/.claude/skills && cp -r skills/ocvfit ~/.claude/skills/
+# or a single project
+mkdir -p .claude/skills && cp -r skills/ocvfit .claude/skills/
+```
+
+Claude Code picks the skill up from these folders; other agents that read the Agent
+Skills format (for example from `.agents/skills/`) use the same folder unchanged.
+
+### MCP server
+
+An optional [Model Context Protocol](https://modelcontextprotocol.io) server exposes the
+same commands as tools over stdio. It uses the official `mcp` Python SDK (1.x `FastMCP`
+or 2.x `MCPServer`).
+
+```bash
+pip install "ocvfit[mcp] @ git+https://github.com/catnap042/ocvfit"
+ocvfit-mcp   # stdio server; normally started by the client
+```
+
+| tool | CLI equivalent |
+|---|---|
+| `check_data` | `ocvfit check` |
+| `fit_cell` | `ocvfit fit` |
+| `degradation_modes` | `ocvfit modes` |
+| `differential_analysis` | `ocvfit ica` |
+| `full_report` | `ocvfit report` |
+| `literature_references` | `ocvfit references` |
+
+Tools take file paths (use absolute paths; relative ones resolve against the server's
+working directory) and an `out_dir`, and return the same JSON document as the CLI plus
+`absolute_files` for the figures.
+
+Claude Code:
+
+```bash
+claude mcp add --transport stdio --scope user ocvfit -- ocvfit-mcp
+```
+
+Claude Desktop (`claude_desktop_config.json`) and Cursor (`~/.cursor/mcp.json` or the
+project's `.cursor/mcp.json`) use the same `mcpServers` block:
+
+```json
+{
+  "mcpServers": {
+    "ocvfit": {
+      "command": "/path/to/venv/bin/ocvfit-mcp",
+      "args": []
+    }
+  }
+}
+```
+
+Use the absolute path of `ocvfit-mcp` (`which ocvfit-mcp`) when the client does not
+inherit your shell's `PATH`.
 
 ## Worked examples
 
@@ -644,7 +773,7 @@ Method background:
 Issues and pull requests are welcome.
 
 1. Fork and create a feature branch.
-2. `pip install -e ".[test]" ruff`
+2. `pip install -e ".[test,mcp]" ruff`
 3. Add tests for new behaviour. Fitting changes should include a
    parameter-recovery test on synthetic data with known truth.
 4. Run `ruff check src tests examples`, `ruff format src tests examples` and `pytest`.

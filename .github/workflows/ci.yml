@@ -20,7 +20,7 @@ jobs:
       - name: Install
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[test]"
+          pip install -e ".[test,mcp]"
       - name: Test
         run: pytest -q
       - name: Run examples
@@ -31,3 +31,32 @@ jobs:
           python examples/blended_cathode.py
           python examples/make_example_csv.py
           git diff --exit-code -- examples/data || echo "example CSVs differ from regenerated copies (platform float formatting)"
+      - name: CLI smoke test
+        run: |
+          ocvfit --version
+          ocvfit check --pe examples/data/lfp_halfcell.csv --ne examples/data/graphite_halfcell.csv \
+            --bol examples/data/lfp_fullcell_bol.csv --aged examples/data/lfp_fullcell_aged.csv \
+            --v-full 3.45 --out ci_out
+          ocvfit report --pe examples/data/lfp_halfcell.csv --ne examples/data/graphite_halfcell.csv \
+            --bol examples/data/lfp_fullcell_bol.csv --aged examples/data/lfp_fullcell_aged.csv \
+            --v-full 3.45 --out ci_out
+          ocvfit report --pe lfp --ne graphite --bol examples/data/lfp_fullcell_bol.csv \
+            --aged examples/data/lfp_fullcell_aged.csv --v-full 3.45 --out ci_out_refs --no-figures
+          python skills/ocvfit/scripts/run_ocvfit.py ica --bol examples/data/lfp_fullcell_bol.csv --out ci_out
+          test -s ci_out/report.json && test -s ci_out/report.png
+      - name: MCP SDK 1.x compatibility
+        if: matrix.python-version == '3.12'
+        run: |
+          pip install "mcp<2"
+          pytest -q tests/test_mcp.py
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check src tests examples skills
+      - run: ruff format --check src tests examples skills

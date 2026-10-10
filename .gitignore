@@ -14,3 +14,7 @@ htmlcov/
 .ipynb_checkpoints/
 *.swp
 .DS_Store
+ci_out/
+ci_out_refs/
+ocvfit_out/
+results/
