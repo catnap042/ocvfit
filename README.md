@@ -397,7 +397,8 @@ place of a path: `--pe lfp|nmc811|nmc532`, `--ne graphite|graphite_mohtat2020`
 (`ocvfit references` lists them, `ocvfit settings` prints the frozen settings).
 Exit codes: 0 success (check `warnings`), 1 internal error, 2 usage error, 3 invalid
 input, 4 fit failed. Errors are reported as messages, without a Python traceback (add
-`--debug` to see one). Input files are limited to 25 MiB and 100 000 data rows each.
+`--debug` to see one). Input files must be `.csv`, `.tsv`, `.txt` or `.dat` and are limited to 25 MiB and
+100 000 data rows each.
 Results overwrite only ocvfit's own file names in `--out`; the run is refused if one of
 them is a symbolic link.
 

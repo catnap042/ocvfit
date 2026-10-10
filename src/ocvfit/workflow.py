@@ -25,6 +25,7 @@ from __future__ import annotations
 import copy
 import csv
 import hashlib
+import importlib.util
 import json
 import math
 import platform
@@ -138,6 +139,8 @@ EXIT_CODES: dict[int, str] = {
 #: is rejected (exit code 3) so that a wrong or huge file cannot stall a fit.
 MAX_INPUT_BYTES = 25 * 1024 * 1024
 MAX_INPUT_ROWS = 100_000
+#: Accepted input file extensions (case-insensitive).
+INPUT_SUFFIXES = (".csv", ".tsv", ".txt", ".dat")
 
 #: Names of the files a command may write into the output directory.
 _OUTPUT_NAME = re.compile(r"^(check|fit|modes|ica|report)(_ica)?\.(json|md|png)$|^ica_[0-9A-Za-z_]+\.csv$")
@@ -252,6 +255,10 @@ def read_table(path: str, label: str) -> tuple[list[str], dict[str, FloatArray],
     p = Path(path)
     if not p.is_file():
         raise WorkflowError(3, f"{label}: file not found: {path}")
+    if p.suffix.lower() not in INPUT_SUFFIXES:
+        raise WorkflowError(
+            3, f"{label}: {path} is not a delimited text file (expected one of {', '.join(INPUT_SUFFIXES)})"
+        )
     size = p.stat().st_size
     if size > MAX_INPUT_BYTES:
         raise WorkflowError(
@@ -636,7 +643,14 @@ def _fit_summary(fit: FitResult, label: str) -> tuple[dict[str, Any], list[str]]
 
 
 # --------------------------------------------------------------------- outputs
+def _has_matplotlib() -> bool:
+    return importlib.util.find_spec("matplotlib") is not None
+
+
 def _base(command: str, opts: Options) -> dict[str, Any]:
+    warnings: list[str] = []
+    if opts.figures and not _has_matplotlib():
+        warnings.append('figures skipped: matplotlib is not installed (pip install "ocvfit[plot]")')
     return {
         "tool": "ocvfit",
         "schema_version": SCHEMA_VERSION,
@@ -644,7 +658,7 @@ def _base(command: str, opts: Options) -> dict[str, Any]:
         "status": "ok",
         "exit_code": 0,
         "errors": [],
-        "warnings": [],
+        "warnings": warnings,
         "versions": _versions(),
         "options": {k: v for k, v in asdict(opts).items() if k not in ("out", "figures")},
         "settings": copy.deepcopy(SETTINGS),
@@ -862,7 +876,9 @@ def run_check(opts: Options) -> dict[str, Any]:
     except WorkflowError as exc:
         return _usage_guard(doc, exc, out, "check")
     doc["inputs"] = items
-    doc["errors"], doc["warnings"] = _collect(items)
+    errors, warnings = _collect(items)
+    doc["errors"] += errors
+    doc["warnings"] += warnings
     if doc["errors"]:
         doc["exit_code"] = 3
     if opts.figures and not doc["errors"] and _check_figure(opts, out / "check.png"):

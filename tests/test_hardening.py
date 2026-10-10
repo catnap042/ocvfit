@@ -114,3 +114,19 @@ def test_mcp_root_sandbox(tmp_path, monkeypatch):
     data.write_text(Path(BOL).read_text())
     doc = mcp_server.check_data(pe=["lfp"], ne="graphite", bol=str(data), out_dir=str(root / "o"))
     assert doc["exit_code"] == 0
+
+
+def test_non_text_extension_rejected(tmp_path):
+    f = tmp_path / "curve.json"
+    f.write_text(Path(BOL).read_text())
+    code, doc = _check(["--pe", "lfp", "--ne", "graphite", "--bol", str(f)], tmp_path / "o")
+    assert code == 3
+    assert any("not a delimited text file" in e for e in doc["errors"])
+
+
+def test_missing_matplotlib_is_reported(tmp_path, monkeypatch):
+    monkeypatch.setattr(workflow, "_has_matplotlib", lambda: False)
+    code = main(["check", *CELL, "--out", str(tmp_path)])
+    doc = json.loads((tmp_path / "check.json").read_text())
+    assert code == 0
+    assert any("matplotlib is not installed" in w for w in doc["warnings"])

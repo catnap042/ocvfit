@@ -11,7 +11,8 @@ All notable changes are listed here. The project follows
 - Optional MCP server `ocvfit-mcp` (`ocvfit[mcp]`) with the same workflows as tools.
 - Agent Skill in `skills/ocvfit/` (SKILL.md, reference, wrapper script).
 - `python -m ocvfit`.
-- Input limits (25 MiB, 100 000 rows per file), output-directory guards, `--debug`, and the
+- Input limits (.csv/.tsv/.txt/.dat, 25 MiB, 100 000 rows per file), output-directory
+  guards, a warning when figures are skipped, `--debug`, and the
   optional `OCVFIT_MCP_ROOT` sandbox.
 - PyBaMM BSD-3-Clause notice in `LICENSES/`; SECURITY, CONTRIBUTING and issue templates.
 
