@@ -18,7 +18,7 @@ keywords = [
     "LLI", "LAM", "loss of lithium inventory", "loss of active material",
     "dQ/dV", "dV/dQ", "incremental capacity analysis", "differential voltage analysis",
     "LFP", "NMC", "graphite", "state of health", "battery diagnostics", "electrochemistry",
-    "cli",
+    "cli", "mcp", "agent skill",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -41,9 +41,11 @@ classifiers = [
 [project.optional-dependencies]
 plot = ["matplotlib>=3.5"]
 test = ["pytest>=7", "matplotlib>=3.5"]
+mcp = ["mcp>=1.2,<3", "matplotlib>=3.5"]
 
 [project.scripts]
 ocvfit = "ocvfit.cli:main"
+ocvfit-mcp = "ocvfit.mcp_server:main"
 
 [project.urls]
 Repository = "https://github.com/catnap042/ocvfit"
