@@ -77,6 +77,7 @@ bundled.
 - [Citing and references](#citing-and-references)
 - [Contributing](#contributing)
 - [License](#license)
+- [Privacy](#privacy)
 
 ## Installation
 
@@ -789,5 +790,13 @@ Issues and pull requests are welcome.
 ## License
 
 [MIT](LICENSE) (c) 2026 catnap42. The literature OCP expressions come from the
-cited publications via the PyBaMM parameter library (BSD-3-Clause). The CSV
-files in `examples/data/` are synthetic and covered by the MIT licence.
+cited publications via the PyBaMM parameter library (BSD-3-Clause); its copyright and
+license notice is in [`LICENSES/PyBaMM-BSD-3-Clause.txt`](LICENSES/PyBaMM-BSD-3-Clause.txt)
+and ships with the package. The CSV files in `examples/data/` are synthetic and covered by
+the MIT licence. No measured or third-party data are included.
+
+## Privacy
+
+ocvfit collects no data: no telemetry, no analytics, no update checks. The library, the
+CLI and the MCP server make no network connections; your curves and results stay in the
+files you choose.

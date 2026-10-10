@@ -3,7 +3,8 @@
 The analytic expressions below are taken from the peer-reviewed literature as
 implemented in the PyBaMM parameter library (BSD-3-Clause,
 https://github.com/pybamm-team/PyBaMM). They are re-typed here so that
-``ocvfit`` does not depend on PyBaMM. All functions take the lithiation
+``ocvfit`` does not depend on PyBaMM; the PyBaMM copyright and license notice
+is reproduced in ``LICENSES/PyBaMM-BSD-3-Clause.txt``. All functions take the lithiation
 fraction (stoichiometry) ``x`` and return the potential in V vs Li/Li+.
 
 References
