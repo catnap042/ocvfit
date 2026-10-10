@@ -332,7 +332,7 @@ import ocvfit as of
 
 pos = of.io.load_ocp("examples/data/lfp_halfcell.csv", "x", "voltage_V", name="LFP")
 neg = of.io.load_ocp("examples/data/graphite_halfcell.csv", "x", "voltage_V", name="graphite")
-q, v = of.io.load_xy("examples/data/lfp_fullcell_discharge.csv", "capacity_Ah", "voltage_V")
+q, v = of.io.load_xy("examples/data/lfp_fullcell_aged.csv", "capacity_Ah", "voltage_V")
 
 # v_full: measured rest voltage after a full charge. Pass None to fit x100 instead.
 model = of.CapacityModel(pos, neg, v_full=3.45)

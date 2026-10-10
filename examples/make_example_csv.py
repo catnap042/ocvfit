@@ -30,16 +30,19 @@ def main() -> None:
             OUT / name, np.column_stack([x, u]), delimiter=",", header="x,voltage_V", comments="", fmt="%.6f"
         )
 
-    # Full-cell low-rate discharge: capacity discharged from full charge (Ah) and voltage (V)
+    # Full-cell low-rate discharge curves (BOL and aged): capacity discharged from full
+    # charge (Ah) and voltage (V). Ground truth: LLI 8 %, LAM_PE 5 %, LAM_NE 6 %;
+    # rested full-charge voltage 3.45 V.
     cell = of.demo_cells("lfp", noise=1e-3, n=150, seed=5)
-    np.savetxt(
-        OUT / "lfp_fullcell_discharge.csv",
-        np.column_stack([cell.q["aged"], cell.voltage["aged"]]),
-        delimiter=",",
-        header="capacity_Ah,voltage_V",
-        comments="",
-        fmt="%.6f",
-    )
+    for label in ("BOL", "aged"):
+        np.savetxt(
+            OUT / f"lfp_fullcell_{label.lower()}.csv",
+            np.column_stack([cell.q[label], cell.voltage[label]]),
+            delimiter=",",
+            header="capacity_Ah,voltage_V",
+            comments="",
+            fmt="%.6f",
+        )
     print(f"wrote CSV files to {OUT.name}/")
 
 
