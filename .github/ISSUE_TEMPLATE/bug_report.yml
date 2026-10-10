@@ -1,0 +1,35 @@
+name: Bug report
+description: Something does not work or gives a wrong result
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you run, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command or code
+      description: The exact `ocvfit ...` command, MCP tool call or Python snippet.
+      render: shell
+  - type: textarea
+    id: output
+    attributes:
+      label: Output
+      description: "`status`, `errors` and `warnings` from the JSON output, or the error message."
+      render: text
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: "Output of `ocvfit --version`, plus Python version and OS."
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: >
+        Please attach only data you are allowed to share; a small synthetic CSV is ideal.
+        For security problems use private reporting (see SECURITY.md), not an issue.

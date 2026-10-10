@@ -1,0 +1,14 @@
+name: Question or feature request
+description: Ask about the method, the results, or suggest an improvement
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question or idea
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Chemistry, type of data (half-cell / full-cell, C-rate), what you tried.

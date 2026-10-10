@@ -18,3 +18,11 @@ ci_out/
 ci_out_refs/
 ocvfit_out/
 results/
+.env
+.env.*
+*.pem
+*.key
+.venv*/
+.tox/
+.nox/
+coverage.xml

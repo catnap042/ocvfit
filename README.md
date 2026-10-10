@@ -778,15 +778,11 @@ Method background:
 
 ## Contributing
 
-Issues and pull requests are welcome.
-
-1. Fork and create a feature branch.
-2. `pip install -e ".[test,mcp]" ruff`
-3. Add tests for new behaviour. Fitting changes should include a
-   parameter-recovery test on synthetic data with known truth.
-4. Run `ruff check src tests examples`, `ruff format src tests examples` and `pytest`.
-5. Do not add measured data unless it is openly licensed and attributed. Prefer
-   synthetic data from published OCP functions.
+Questions, bug reports and pull requests are welcome via
+[GitHub Issues](https://github.com/catnap042/ocvfit/issues); see
+[CONTRIBUTING.md](CONTRIBUTING.md) for the development setup and
+[SECURITY.md](SECURITY.md) for reporting security problems privately. Changes are listed
+in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
