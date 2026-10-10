@@ -157,7 +157,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         pass  # nothing was written; the errors are printed below
     else:
         out = doc["output_dir"]
-        md = (Path(out) / doc["files"]["summary"]).read_text()
+        md = (Path(out) / doc["files"]["summary"]).read_text(encoding="utf-8")
         print(md.rstrip())
         print(f"\nResults: {out}/{doc['files']['json']}")
         for k in ("figure", "ica_figure"):

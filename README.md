@@ -98,7 +98,8 @@ pip install -e ".[test,mcp]"
 pytest
 ```
 
-Requires Python 3.10 or newer, NumPy 1.22 or newer and SciPy 1.9 or newer.
+Requires Python 3.10 or newer, NumPy 1.22 or newer and SciPy 1.9 or newer. CI runs the
+tests on Linux (Python 3.10 to 3.13) and on Windows and macOS (Python 3.12).
 
 ## Quickstart
 

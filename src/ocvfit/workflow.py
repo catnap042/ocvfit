@@ -658,8 +658,9 @@ def _finish(doc: dict[str, Any], out: Path, md: str) -> dict[str, Any]:
     doc["files"]["summary"] = f"{doc['command']}.md"
     clean = _clean(doc)
     out.mkdir(parents=True, exist_ok=True)
-    (out / f"{doc['command']}.json").write_text(json.dumps(clean, indent=2, sort_keys=False) + "\n")
-    (out / f"{doc['command']}.md").write_text(md)
+    text = json.dumps(clean, indent=2, sort_keys=False) + "\n"
+    (out / f"{doc['command']}.json").write_text(text, encoding="utf-8")
+    (out / f"{doc['command']}.md").write_text(md, encoding="utf-8")
     clean["output_dir"] = str(out)
     return clean
 
