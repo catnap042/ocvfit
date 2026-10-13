@@ -5,6 +5,8 @@ All notable changes are listed here. The project follows
 
 ## Unreleased
 
+## 0.2.0 - 2026-10-09
+
 ### Added
 - `ocvfit` command-line tool with frozen, deterministic workflows: `check`, `fit`,
   `modes`, `ica`, `report` (JSON + Markdown + PNG outputs, documented exit codes).

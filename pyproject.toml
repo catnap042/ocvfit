@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ocvfit"
-version = "0.1.0"
+version = "0.2.0"
 description = "Fit full-cell OCV curves from half-cell OCP curves and quantify lithium-ion degradation modes (LLI, LAM_PE, LAM_NE)."
 readme = "README.md"
 license = "MIT"
