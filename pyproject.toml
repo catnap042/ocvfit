@@ -9,7 +9,7 @@ description = "Fit full-cell OCV curves from half-cell OCP curves and quantify l
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE", "LICENSES/*"]
-authors = [{ name = "catnap42" }]
+authors = [{ name = "catnap042" }]
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.22", "scipy>=1.9"]
 keywords = [

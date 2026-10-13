@@ -257,7 +257,7 @@ in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
-[MIT](LICENSE) (c) 2026 catnap42. The literature OCP expressions come from the
+[MIT](LICENSE) (c) 2026 catnap042. The literature OCP expressions come from the
 cited publications via the PyBaMM parameter library (BSD-3-Clause); its copyright and
 license notice is in [`LICENSES/PyBaMM-BSD-3-Clause.txt`](LICENSES/PyBaMM-BSD-3-Clause.txt)
 and ships with the package. The CSV files in `examples/data/` are synthetic and covered by
