@@ -5,6 +5,10 @@ All notable changes are listed here. The project follows
 
 ## Unreleased
 
+### Docs
+- README restructured around the Agent Skill and MCP server quickstarts; detailed
+  usage moved to `docs/` (skill, mcp, cli, python-api, examples, method).
+
 ## 0.2.0 - 2026-10-09
 
 ### Added
