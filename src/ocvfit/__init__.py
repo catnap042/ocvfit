@@ -11,7 +11,7 @@ from .models import CapacityModel, CathodeFixedModel, ModelComponents, WindowMod
 from .ocp import OCPCurve, clean_curve, compress_pchip, monotonize, smooth
 from .uncertainty import bias_budget, is_identifiable, lag1_autocorrelation, mode_interval, profile_interval
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 __all__ = [
     "BlendedElectrode",

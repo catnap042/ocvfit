@@ -5,9 +5,12 @@ All notable changes are listed here. The project follows
 
 ## Unreleased
 
+## 0.2.1 - 2026-10-13
+
 ### Docs
 - README restructured around the Agent Skill and MCP server quickstarts; detailed
   usage moved to `docs/` (skill, mcp, cli, python-api, examples, method).
+- Author name unified to `catnap042` (LICENSE, pyproject).
 
 ## 0.2.0 - 2026-10-09
 
