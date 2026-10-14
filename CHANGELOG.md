@@ -5,6 +5,17 @@ All notable changes are listed here. The project follows
 
 ## Unreleased
 
+### Docs
+- README opens with the problem it solves and a 30-second install + quickstart on the
+  bundled synthetic data.
+- New `GLOSSARY.md` (terms matched to code names) and `SCOPE.md` (data policy,
+  supported vs not yet, declined ideas). Declined ideas are recorded in `.out-of-scope/`.
+
+### Tests
+- New `tests/test_known_answers.py`: closed-form toy OCPs and full-cell curves built
+  without ocvfit code; LLI/LAM_PE/LAM_NE recovered within 0.5 pp over 3 noise seeds,
+  plus a gate test that must flag LAM_PE as not identifiable for a flat positive OCP.
+
 ## 0.2.1 - 2026-10-13
 
 ### Docs

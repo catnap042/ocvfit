@@ -4,14 +4,34 @@
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://github.com/catnap042/ocvfit/blob/main/pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**Low-rate full-cell discharge curves + half-cell OCP curves in → electrode alignment,
-degradation modes (LLI, LAM_PE, LAM_NE) with identifiability verdicts, and dQ/dV / dV/dQ
-out, as JSON, Markdown and PNG.**
+**Why:** splitting capacity fade into lithium loss (LLI) and active-material loss
+(LAM_PE, LAM_NE) usually means sliding half-cell curves by hand in a spreadsheet or a
+one-off script. It is slow, two people get two answers, and nothing tells you when the
+data simply cannot pin a mode down. That last problem is common for flat-plateau LFP.
 
-Ask your AI agent to *"check my CSV and decompose the ageing"* and it runs a fixed,
-deterministic fitting pipeline instead of writing its own code. The same pipeline is
-available as an [Agent Skill](#quickstart-with-an-ai-agent-skill), an
-[MCP server](#mcp-server), a [command-line tool](#command-line-tool) and a
+**What ocvfit does:** it takes low-rate full-cell discharge curves and half-cell OCP
+curves, runs one fixed, deterministic fitting pipeline, and returns the electrode
+alignment, LLI / LAM_PE / LAM_NE with intervals and an *identifiable / not identifiable*
+verdict for each, and dQ/dV / dV/dQ. Output is JSON, Markdown and PNG. Terms are
+defined in [GLOSSARY.md](GLOSSARY.md); what is in and out of scope is in [SCOPE.md](SCOPE.md).
+
+**30-second try** (bundled synthetic LFP/graphite data, no account, no network after install):
+
+```bash
+pip install "ocvfit[plot] @ git+https://github.com/catnap042/ocvfit.git"
+git clone --depth 1 https://github.com/catnap042/ocvfit && cd ocvfit
+ocvfit report --pe examples/data/lfp_halfcell.csv --ne examples/data/graphite_halfcell.csv \
+              --bol examples/data/lfp_fullcell_bol.csv --aged examples/data/lfp_fullcell_aged.csv \
+              --v-full 3.45 --out results
+```
+
+Open `results/report.md`: LLI comes out at 7.98 % (synthetic truth 8 %) and is marked
+identifiable. LAM_PE and LAM_NE are reported as intervals only, because this
+negative-limited LFP cell does not determine them.
+
+To have an AI agent run it for you, use the same pipeline as an
+[Agent Skill](#quickstart-with-an-ai-agent-skill) or an [MCP server](#mcp-server). It is
+also available as a [command-line tool](#command-line-tool) and a
 [Python API](docs/python-api.md).
 
 | LFP/graphite (headline example) | NMC532/graphite |
@@ -218,6 +238,8 @@ and your own CSV data: **[docs/python-api.md](docs/python-api.md)**.
 | [docs/python-api.md](docs/python-api.md) | Python API: installation, usage guide, own data, open datasets |
 | [docs/examples.md](docs/examples.md) | worked LFP/graphite and NMC532/graphite examples |
 | [docs/method.md](docs/method.md) | method and theory, FAQ and limitations |
+| [GLOSSARY.md](GLOSSARY.md) | definitions of OCV, OCP, LLI, LAM, x/y, v_full, identifiability and other terms |
+| [SCOPE.md](SCOPE.md) | what the project accepts and declines; [.out-of-scope/](.out-of-scope) has the reasons |
 
 ## Citing and references
 
