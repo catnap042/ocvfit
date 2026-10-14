@@ -102,9 +102,15 @@ def test_sloped_cell_recovers_known_modes(seed):
     assert got["Q_pe"] == pytest.approx(bol[0], rel=0.01)
     assert got["Q_ne"] == pytest.approx(bol[1], rel=0.01)
     assert got["n_li"] == pytest.approx(bol[2], rel=0.01)
+    # Aged absolute capacities against the hand-set aged truth
+    aged = aged_params(bol)
+    got_a = fa.param_dict
+    for k, i in (("Q_pe", 0), ("Q_ne", 1), ("n_li", 2)):
+        assert got_a[k] == pytest.approx(aged[i], rel=0.01), k
 
 
-def test_flat_positive_gate_fires():
+@pytest.mark.parametrize("seed", SEEDS)
+def test_flat_positive_gate_fires(seed):
     """Gate test: this case is built so that LAM_PE cannot be identified.
 
     The positive OCP is flat across the whole measured window (the cell is
@@ -115,7 +121,7 @@ def test_flat_positive_gate_fires():
     code has become over-confident.
     """
     bol = (3.6, 3.0, 2.8, 0.005)
-    fb, fa = fit_pair(u_flat_pe, bol, v_full=3.45, seed=0, depth=0.97)
+    fb, fa = fit_pair(u_flat_pe, bol, v_full=3.45, seed=seed, depth=0.97)
     lo, hi = of.mode_interval(fb, fa, "LAM_PE")
     assert not of.is_identifiable(0.5 * (hi - lo))
     assert lo <= TRUE_MODES["LAM_PE"] <= hi  # wide, but still honest
